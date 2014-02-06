@@ -1,99 +1,208 @@
-public class BSTCounter<Comparable> extends AbstractSet<E>
+import java.util.Comparator;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
+
+public class
+BST<K,V>
+implements Set<K>
 {
-    private BSTCounterNode root;
+    protected Node<K,V> root;
+    protected final Comparator<K> comp;
 
-    public BSTCounter()
+    public
+    BST()
     {
+	this(null);
+    }
+
+    public
+    BST(Comparator<K> comp)
+    {
+	if (comp == null)
+	    comp = new NaturalComparator<K>();
 	this.root = null;
+	this.comp = comp;
+    }
+
+    public boolean
+    add(K key)
+    {
+	return add(key, null);
+    }
+
+    public boolean
+    add(K key, V value)
+    {
+	return add(key, value, root) != null;
+    }
+
+    protected Node<K,V>
+    add(K key, V value, Node<K,V> node)
+    {
+	/* reached end of recursion, insert new leaf node */
+	if (node == null)
+	    return new Node<K,V>(key, value);
+
+	int c;
+	c = comp.compare(key, node.key);
+
+	if (c < 0)
+	    node.left = add(key, value, node.left);
+	else if (c > 0)
+	    node.right = add(key, value, node.right);
+	else /* c == 0 implied */
+	    node.value = value;
+
+	return node;
     }
 
     @Override
-    public boolean add(Comparable e)
+    public boolean
+    addAll(Collection<? extends K> c)
+    throws UnsupportedOperationException
     {
-	add(e, root);
-	return true;
-    }
-
-    /* I think this doesn't need to be implemented
-    public boolean addAll(Collection<Comparable> c)
-    {
-	for (e : c) {
-	    
-    }
-    */
-
-    @Override
-    public boolean contains(Comparable e)
-    {
-	return contains(e, this.root);
-    }
-
-    public int count(Comparable e)
-    {
-	return count(e, this.root);
+	throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isEmpty()
+    public void
+    clear()
+    throws UnsupportedOperationException
     {
-	return this.root == null;
-    }	
+	throw new UnsupportedOperationException();
+    }
+
+    public Comparator<? super K>
+    comparator()
+    {
+	return comp;
+    }
 
     @Override
-    public int size()
+    public boolean
+    contains(Object o)
+    throws UnsupportedOperationException
     {
-	return size(this.root);
+	throw new UnsupportedOperationException();
     }
 
-    protected BSTCounterNode add(Comparable e, BSTCounterNode n)
+    @Override
+    public boolean
+    containsAll(Collection<?> c)
+    throws UnsupportedOperationException
     {
-	if (n == null)
-	    n = new BSTCounterNode(e);
-	else if (e.compareTo(n.element) < 0)
-	    n.left = add(e, n.left);
-	else if (e.compareTo(n.element) > 0)
-	    n.right = add(e, n.right);
-	else
-	    n.count++;
-	return n;
+	throw new UnsupportedOperationException();
     }
 
-    protected boolean contains(Comparable e, BSTCounterNode n)
+    @Override
+    public boolean
+    equals(Object o)
+    throws UnsupportedOperationException
     {
-	if (n == null)
-	    return false;
-	if (n.element == e)
-	    return true;
-	return contains(e, n.left) || contains(e, n.right);
+	throw new UnsupportedOperationException();
     }
 
-    protected int count(Comparable e, BSTCounterNode n)
+    @Override
+    public int
+    hashCode()
+    throws UnsupportedOperationException
     {
-	if (n == null)
-	    return 0;
-	if (n.element == e)
-	    return n.count;
-	return count(n.left) + count(n.right);
+	throw new UnsupportedOperationException();
     }
 
-    protected int size(BSTCounterNode n)
+    public boolean
+    isEmpty()
     {
-	return (n == null) ? 0
-	                   : 1 + size(n.left) + size(n.right);
+	return root == null;
+    }
+
+    @Override
+    public Iterator<K>
+    iterator()
+    throws UnsupportedOperationException
+    {
+	throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean
+    remove(Object o)
+    throws UnsupportedOperationException
+    {
+	throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean
+    removeAll(Collection<?> c)
+    throws UnsupportedOperationException
+    {
+	throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean
+    retainAll(Collection<?> c)
+    throws UnsupportedOperationException
+    {
+	throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int
+    size()
+    throws UnsupportedOperationException
+    {
+	return (root == null) ? 0 : size(root);
+    }
+
+    private int
+    size(Node<K,V> n)
+    {
+	return 1 + ((n.left == null) ? 0 : size(n.left))
+                 + ((n.right == null) ? 0 : size(n.right));
+    }
+
+    @Override
+    public Object[]
+    toArray()
+    throws UnsupportedOperationException
+    {
+	throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> T[]
+    toArray(T[] a)
+    throws UnsupportedOperationException
+    {
+	throw new UnsupportedOperationException();
     }
 }
 
-class BSTCounterNode
+class
+Node<K,V>
 {
-    Comparable element;
-    int        count;
-    BSTNode    left;
-    BSTNode    right;
+    K key;
+    V value;
+    Node<K,V> left, right;
 
-    BSTNode(Comparable e)
+    Node(K key)
     {
-	this.element = e;
-	this.count = 1;
-	this.right = this.left = null;
+	this(key, null, null, null);
+    }
+
+    Node(K key, V value)
+    {
+	this(key, value, null, null);
+    }
+
+    Node(K key, V value, Node<K,V> left, Node<K,V> right)
+    {
+	this.key = key;
+	this.value = value;
+	this.left = left;
+	this.right = right;
     }
 }

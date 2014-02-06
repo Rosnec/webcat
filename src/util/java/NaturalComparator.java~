@@ -1,0 +1,10 @@
+public class
+NaturalComparator<T>
+implements Comparator<T>
+{
+
+
+
+
+
+}

@@ -5,5 +5,5 @@
             :url "https://www.gnu.org/licenses/gpl-3.0.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :main webcat.core
-  :aot [visualloy.core]
+  :aot [webcat.core]
   :java-source-paths ["src/util/java"])
