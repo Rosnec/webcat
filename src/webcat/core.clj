@@ -1,11 +1,13 @@
 (ns webcat.core
-  (:import [util.java.BSTStringCounter])
+  (:require laser)
   (:gen-class))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (let [tree (new BSTStringCounter)]
-    (doseq [s ["apple" "pear" "peach" "lemon" "fish" "quail"]]
+  (let [tree (new BST)
+        items ["apple" "pear" "peach" "lemon" "fish" "quail"]]
+    (doseq [s items]
       (.add tree s))
-    (println (.size tree))))
+    (doseq [s items]
+      (println (.contains tree s)))))

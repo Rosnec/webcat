@@ -19,10 +19,8 @@ implements Set<K>
     public
     BST(Comparator<K> comp)
     {
-	if (comp == null)
-	    comp = new NaturalComparator<K>();
 	this.root = null;
-	this.comp = comp;
+	this.comp = (comp == null) ? new NaturalComparator<K>() : comp;
     }
 
     public boolean
@@ -34,7 +32,8 @@ implements Set<K>
     public boolean
     add(K key, V value)
     {
-	return add(key, value, root) != null;
+	root = add(key, value, root);
+	return true;
     }
 
     protected Node<K,V>
@@ -82,9 +81,24 @@ implements Set<K>
     @Override
     public boolean
     contains(Object o)
-    throws UnsupportedOperationException
     {
-	throw new UnsupportedOperationException();
+	return contains(o, root);
+    }
+
+    protected boolean
+    contains(Object o, Node<K,V> n)
+    {
+	if (n == null)
+	    return false;
+	
+	int c = comp.compare(o, n.key);
+
+	if (c < 0)
+	    return contains(o, n.left);
+	else if (c > 0)
+	    return contains(o, n.right);
+	else
+	    return true;
     }
 
     @Override
@@ -152,7 +166,6 @@ implements Set<K>
     @Override
     public int
     size()
-    throws UnsupportedOperationException
     {
 	return (root == null) ? 0 : size(root);
     }
@@ -160,6 +173,7 @@ implements Set<K>
     private int
     size(Node<K,V> n)
     {
+	System.out.println("ITS WORKING!");
 	return 1 + ((n.left == null) ? 0 : size(n.left))
                  + ((n.right == null) ? 0 : size(n.right));
     }
