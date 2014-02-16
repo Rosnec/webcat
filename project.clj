@@ -5,6 +5,6 @@
             :url "https://www.gnu.org/licenses/gpl-3.0.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [seesaw "1.4.4"]
-                 [me.raynes/laser "1.1.1"]]
+                 [clojurewerkz/crawlista "1.0.0-alpha18"]]
   :main webcat.core
   :aot [webcat.core])

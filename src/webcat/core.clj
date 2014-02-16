@@ -1,8 +1,12 @@
 (ns webcat.core
-  (:require me.raynes.laser :as laser)
+  "Launches webcat program."
+  (:require [webcat.gui  :refer [main-window]]
+            [seesaw.core :refer [pack! show!]])
   (:gen-class))
 
 (defn -main
-  "I don't do a whole lot ... yet."
+  "Launch the program."
   [& args]
-  (println "Hello, World."))
+  (-> main-window
+      pack!
+      show!))

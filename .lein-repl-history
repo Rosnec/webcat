@@ -1,3 +1,52 @@
 (require 'me.raynes.laser)
 (require 'me.raynes.laser :as 'laser)
 (require 'me.raynes.laser :as laser)
+(require 'clojure.java.browse)
+(clojure.java.browse/browse-url "www.duckduckgo.com")
+(doc io!)
+(meta io!)
+(source io!)
+(frequencies "a b a a b")
+(reduce
+         (fn [primes number]
+           (if (some zero? (map (partial mod number) primes))
+             primes
+             (conj primes number)))
+         [2]
+         (take 1000 (iterate inc 3)))
+(defn primes [n] (reduce
+         (fn [primes number]
+           (if (some zero? (map (partial mod number) primes))
+             primes
+             (conj primes number)))
+         [2]
+         (take n (iterate inc 3))))
+(primes 10000)
+(primes 100000)
+(
+)
+(doc filter)
+(use webcat.editor
+)
+(use 'webcat.editor)
+(if 0 true false)
+(if nil true false)
+(if false true false)
+(concat "af" "g d"
+)
+(use 'clojure.string)
+(require 'clojure.string)
+(clojure.string/join "ab " "c d")
+(clojure.string/join ["ab " "c d"])
+(clojure.string/join "ab c d")
+(use seesaw.bind)
+(use 'seesaw.bind)
+(doc seesaw.bind/transform)
+(doc 'seesaw.bind/transform)
+(sdoc 'seesaw.bind/transform)
+(meta 'seesaw.bind/transform)
+(meta seesaw.bind/transform)
+(seesaw.bind/transform)
+(seesaw.bind/transform 1)
+(doc (seesaw.bind/transform 1))
+(doc '(seesaw.bind/transform 1))
