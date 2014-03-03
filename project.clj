@@ -5,6 +5,7 @@
             :url "https://www.gnu.org/licenses/gpl-3.0.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.incubator "0.1.3"]
+                 [org.clojure/math.numeric-tower "0.0.4"]
                  [seesaw "1.4.4"]
                  [clojurewerkz/crawlista "1.0.0-alpha18"]]
   :main webcat.core
