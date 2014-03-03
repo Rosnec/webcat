@@ -72,7 +72,7 @@
                                                        (set (keys category)))]
                         (apply + (for [[n word] (util/indexed words)]
                                    (let [score (category word)]
-                                     (* score (util/root 2 n))))))))
+                                     (* score (util/root 2 (inc n)))))))))
 
 (defn compare-url
   "Compares the words from the webpage at `url` to the given category, using
