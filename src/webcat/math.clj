@@ -36,9 +36,9 @@
          (util/map-values (fn [x] (sd-from-mean-squared x mean std))
                           m))))
 
-(defmacro score
+(defn score
   "Scores a mapping of numbers"
-  ([m] (sd-squared-of-map m)))
+  ([m] (sd-of-map m)))
 
 (defn compare-words
   ([& maps] (let [shared-words (apply util/matching-values maps)]
@@ -56,7 +56,10 @@
                      old-score (if (map? old-val)
                                  (compare-words m old-val)
                                  old-val)]
-                 (if (< new-score old-score)
+                 (println "NEW!!!!" new-score "OLD!!!!" old-score)
+                 (if (or (nil? old-score)
+                         (and new-score
+                              (< new-score old-score)))
                    [new-key new-score]
                    [old-key old-score])))
              coll)))

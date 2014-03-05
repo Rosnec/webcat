@@ -2,10 +2,12 @@
   "Graphical user interface for webcat."
   (:use [seesaw.core]
         [seesaw.font])
-  (:require [webcat.cat :as cat]
-            [webcat.dat :as dat]
-            [webcat.io :as io]
+  (:require [webcat.dat :as dat]
             [seesaw.bind :refer [bind property tee transform]]))
+
+(declare main-window layout results input-bar
+         best-category-text best-url-text
+         url-input-box search-button)
 
 ;; (def layout
 ;;   (vertical-panel
@@ -96,6 +98,55 @@
 ;;          :minimum-size [640 :by 480]
 ;;          :menubar menus
 ;;          :on-close :exit))
+
+(defn process-url
+  ([e] (let [url (config url-input-box :text)
+             best-url      (dat/closest-url url)
+             best-category (dat/closest-category url)]
+         (config! best-url-text      :text (first best-url))
+         (config! best-category-text :text best-category))))
+
+
+(def url-input-box
+  (text :text ""))
+
+(def search-button
+  (button :text "Search"
+          :halign :right
+          :valign :center
+          :listen [:action process-url]))
+
+(def input-bar
+  (horizontal-panel :items [url-input-box
+                            search-button]
+                    :maximum-size [1000 :by 50]
+                    :minimum-size [0 :by 50]))
+
+(def best-category-text
+  (label "THIS IS A CATEGORY"))
+
+(def best-url-text
+  (label "THIS IS A URL"))
+
+(def results
+  (grid-panel :items [(label "Category:") best-category-text
+                      (label "URL:")      best-url-text]
+              :columns 2))
+
+(def layout
+  (vertical-panel :items [results
+                          input-bar]))
+
+(def main-window
+  (frame :title "webcat"
+         :content layout
+         :minimum-size [640 :by 480]
+         :on-close :exit))
+
+
+
+
+
 
 ;; Notes ;;
 ; For nice presentation, bind the title to

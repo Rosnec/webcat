@@ -1,5 +1,6 @@
 (ns webcat.words
   (:require [clojure.string :as string]
+            [webcat.math :as math]
             [webcat.util :as util]))
 
 (defn split-words
@@ -35,4 +36,4 @@
   ([s n func] (word-scores s n func (constantly true) -))
   ([s n func pred] (word-scores s n func pred -))
   ([s n func pred score-func] (let [word-freqs (word-frequencies s func pred)]
-                                (util/scores word-freqs n score-func))))
+                                (math/score word-freqs))))

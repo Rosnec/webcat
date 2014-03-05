@@ -5,9 +5,20 @@
             [clojure.java.io :as io]
             [webcat.math :as math]
             [webcat.util :as util]
+            [webcat.stop :as stop]
             [webcat.web :as web]
             [webcat.words :as words])
   (:import [java.io PushbackReader]))
+
+(defn word-filter
+  "Filter to be used on the word lists from the websites. Returns
+  logical true if the word should be included, and false if it should not.
+
+  Discards words with length less than 5, or containing non-alphabetic
+  characters."
+  ([word] (not (or (stop/words word)
+                   (re-find #"[^a-zA-Z]"
+                            word)))))
 
 (defn make-page
   "Creates a new page entry using the words parsed from the given `url`,
@@ -20,17 +31,6 @@
                                             func
                                             pred))))
 
-(defn word-filter
-  "Filter to be used on the word lists from the websites. Returns
-  logical true if the word should be included, and false if it should not.
-
-  Discards words with length less than 5, or containing non-alphabetic
-  characters."
-  ([word] (not (or (< (count word)
-                      5)
-                   (re-find #"[^a-zA-Z]"
-                            word)))))
-
 (defonce database
   (ref {}))
 
@@ -39,7 +39,7 @@
   any missing fields, and overwriting duplicate urls."
   ([category url] (dosync
                    (alter database assoc-in [category url]
-                          (make-page url string/lower-case word-filter)))))
+                          (make-page url)))))
 
 (defn clear-sites
   "Clears all sites from the database"
@@ -63,24 +63,11 @@
   ([url word-map] (let [url-map (make-page url)]
                       (math/compare-words url-map word-map))))
 
-(defn url->category
-  "Finds the category in the database which best fits `url`"
-  ([url] (util/map-min-key @database
-                           (fn [category]
-                             (compare-url url (average-category category))))))
-
-(defn url->url
-  "Finds the url in `category` which best fits `url`."
-  ([url category] (util/map-min-key category
-                                    (fn [page] (compare-url url page)))))
-
 (defn closest-url
   ""
-  ([url] (let [site (make-page url string/lower-case word-filter)
+  ([url] (let [site (make-page url)
                best-matches (for [[category sites] @database]
                               (math/best-match site sites))]
-;           (println "Best matches:" best-matches)
-;           (println "site:" site)
            (reduce (fn [[r-key r-val] [key val]] (if (< r-val val)
                                         [r-key r-val]
                                           [key   val]))
@@ -94,7 +81,6 @@
                                                   (math/mean-distance site
                                                                       sites)))
                                          {} @database)]
-           (println category-averages)
            (apply min-key category-averages (keys category-averages)))))
 
 
@@ -109,7 +95,7 @@
             (dosync (ref-set database backup)))))
 
 
-
+1
 ;; Database Generating Functions
 ;;         and some preset sites
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -127,6 +113,24 @@
 (def rap-music ["Run-D.M.C." "LL_Cool_J" "Schoolly_D" "Ice-T" "Snoop_Dogg"
                 "Tupac_Shakur" "Dr._Dre" "Masta_Ace" "Public_Enemy"
                 "Wu-Tang_Clan" "Notorious_B.I.G." "Eminem" "T.I." "50_Cent"])
+(def programming-languages
+  ["Bash_(Unix_shell)" "BASIC" "COBOL" "Common_Lisp"
+   "Fortran" "Go_(programming_language)" "Haskell_(programming_language)"
+   "C_(programming_language)"
+   "C%2B%2B" "Clojure" "Java" "JavaScript"
+   "Python_(programming_language)" "PHP" "Perl" "Ruby_(programming_language)"
+   ])
+(def italian-food
+  ["Penne" "Maccheroni" "Spaghetti" "Linguine"
+   "Fusilli" "Lasagne" "Salami" "Parmigiano-Reggiano"
+   "Pizza" "Calzone" "Gnocchi" "Ravioli"
+   "Fettucine_Alfredo" "Gorgonzola" "Mozzarella" "Biscotti"])
+(def physics
+  ["Thermodynamics" "Quantum_mechanics" "Electromagnetism" "Special_relativity"
+   "General_relativity" "Classical_mechanics" "Gravitation" "Astrophysics"
+   "Particle_physics" "Standard_model" "Quantum_field_theory" "Cosmology"
+   "Optics" "Fluid_mechanics" "Condensed_matter_physics" "Material_physics"
+   ])
 
 (defn add-sites
   "Adds a collection of sites with an optional `prefix` and `suffix`
@@ -139,7 +143,7 @@
 
 (defn add-presets
   ([]
-     (add-sites "Countries" wikipedia countries)
-     (add-sites "Rock Music" wikipedia rock-music)
-     (add-sites "Rap Music" wikipedia rap-music)))
+     (add-sites "Programming Languages" wikipedia programming-languages)
+     (add-sites "Italian Food" wikipedia italian-food)
+     (add-sites "Physics" wikipedia physics)))
 
