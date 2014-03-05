@@ -47,5 +47,13 @@
 (defn best-match
   "Finds the map in `coll` which has the smallest euclidean distance from
   the map `m`."
-  ([m coll] (let [best-matches ])
-     (util/map-min-key )))
+  ([m coll]
+     (reduce (fn [[old-key old-val] [new-key new-val]]
+               (let [new-score (compare-words m new-val)
+                     old-score (if (map? old-val)
+                                 (compare-words m old-val)
+                                 old-val)]
+                 (if (< new-score old-score)
+                   [new-key new-score]
+                   [old-key old-score])))
+             coll)))

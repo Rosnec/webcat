@@ -42,7 +42,7 @@
                    (re-find #"[^a-zA-Z]"
                             word)))))
 
-(def database
+(defonce database
   (ref {}))
 
 (defn add-site
@@ -68,34 +68,6 @@
   ([url category] (dosync (alter database util/dissoc-in
                                  [category url]))))
 
-;; (defn category-score
-;;   "Finds the score of `category`. If `category` is a string, uses the
-;;   appropriate category from the database. If `category` is a map, uses
-;;   `category` by itself. Else returns nil."
-;;   ([category] (math/score (cond (string? category) (@database category)
-;;                                 (map? category) category))))
-
-;; (defn compare-scores
-;;   "Compares the scores of two categories"
-;;   ([c1 c2] (math/score-similarity (vals c1) (vals c2))))
-
-(defn compare-words
-  "Compares an ordered sequence of words to a category"
-  ([words category] (compare-words words category 10))
-  ([words category n] (let [common-words (intersection (set words)
-                                                       (set (keys category)))]
-                        (apply + (for [[n word]
-                                       (take n (util/indexed common-words))]
-                                   (let [score (category word)]
-                                     (println "score" score
-                                              "word" word
-                                              "n" n)
-                                     (* score (util/root 2 (inc n)))))))))
-
-(defn compare-url2
-  "the re-comparening"
-  [url word-map n] )
-
 (defn compare-url
   "Compares the words from the webpage at `url` to the given word map, using
   the top `n` word matches, or top 10 words if `n` is not provided."
@@ -114,13 +86,15 @@
                                     (fn [page] (compare-url url page)))))
 
 (defn closest-url
-  ""
-  ([url] (let [site (make-page url)
+""
+  ([url] (let [site (make-page url string/lower-case word-filter)
                best-matches (for [[category sites] @database]
                               (math/best-match site sites))]
-           (reduce (fn [[rk rv] [k v]] (if (> rv v)
-                                        [rk rv]
-                                         [k  v]))
+;           (println "Best matches:" best-matches)
+;           (println "site:" site)
+           (reduce (fn [[r-key r-val] [key val]] (if (< r-val val)
+                                        [r-key r-val]
+                                          [key   val]))
                    best-matches))))
 
 (defn save-backup
