@@ -12,24 +12,13 @@
 (defn make-page
   "Creates a new page entry using the words parsed from the given `url`,
   filtered with the predicate function `pred`."
-  ([url] (make-page url identity (constantly true)))
-  ([url func] (make-page url func (constantly true)))
+  ([url] (make-page url string/lower-case word-filter))
+  ([url func] (make-page url func word-filter))
   ([url func pred] (into (sorted-map)
                          (words/word-scores (web/url-text url)
                                             1000
                                             func
                                             pred))))
-
-(defn combine-word-maps
-  "Combines a sequence of word-maps"
-  ([maps] (let [total (apply + (flatten (map vals maps)))]
-            (apply merge-with util/mean maps))))
-
-(defn average-category
-  "Averages `category`'s sites' word maps into a single word map."
-  ([category] (combine-word-maps (vals category))))
-
-
 
 (defn word-filter
   "Filter to be used on the word lists from the websites. Returns
@@ -86,7 +75,7 @@
                                     (fn [page] (compare-url url page)))))
 
 (defn closest-url
-""
+  ""
   ([url] (let [site (make-page url string/lower-case word-filter)
                best-matches (for [[category sites] @database]
                               (math/best-match site sites))]
@@ -96,6 +85,18 @@
                                         [r-key r-val]
                                           [key   val]))
                    best-matches))))
+
+(defn closest-category
+  ""
+  ([url] (let [site (make-page url)
+               category-averages (reduce (fn [r [category sites]]
+                                           (assoc r category
+                                                  (math/mean-distance site
+                                                                      sites)))
+                                         {} @database)]
+           (println category-averages)
+           (apply min-key category-averages (keys category-averages)))))
+
 
 (defn save-backup
   "Save the database to a file."
