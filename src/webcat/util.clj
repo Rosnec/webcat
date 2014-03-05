@@ -57,6 +57,33 @@
               nil
               (key (apply max-key (comp func val) m)))))
 
+(defn map-min-key
+  "Finds the key which maps to the greatest value after mapping `func` to `m`.
+  nil if the map is empty."
+  ([m func] (if (empty? m)
+              nil
+              (apply min-key (comp func val) m))))
+
+(defn dig-map
+  "Digs `n` levels deep into the map `m`."
+  ([m n] (if (nil? m)
+           {}
+           (dig-map {} n m)))
+  ([m n o] (if (and (map? m) (> n 0))
+             (reduce into o (map (fn [v] (dig-map o (dec n) v)) (vals m)))
+             (conj o m))))
+
+(defn map-values
+  "Maps `func` to the values of map `m` with optional `args`, returning a
+  new map with the same keys, but different values."
+  ([func m & args] (reduce (fn [r [k v]] (assoc r k (apply func v args)))
+                           {} m)))
+
+(defn matching-values
+  "Returns the sequence of corresponding values to the keys shared by the maps."
+  ([& maps] (map (apply juxt maps) (apply clojure.set/intersection
+                                          (map (comp set keys) maps)))))
+
 (defn proportions
   "Takes a mapping of key -> val, where val is a number, and returns a new
   mapping, where val is now the proportion of val to the vals of the entire
