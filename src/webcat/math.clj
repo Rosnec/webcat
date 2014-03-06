@@ -41,11 +41,16 @@
   ([m] (sd-of-map m)))
 
 (defn compare-words
-  ([& maps] (let [shared-words (apply util/matching-values maps)]
+  ([m & maps] (let [shared-words  (apply util/matching-values m maps)
+                    number-shared (count (first shared-words))
+                    number-in-m   (count m)]
               (if (empty? shared-words)
                 nil
-                (apply stats/euclidean-distance
-                       (apply map list shared-words))))))
+                (+ (/ (apply stats/euclidean-distance
+                             (apply map list shared-words))
+                      number-shared)
+                   (/ (num/abs (- number-shared number-in-m))
+                      number-in-m))))))
 
 (defn best-match
   "Finds the map in `coll` which has the smallest euclidean distance from
@@ -56,7 +61,7 @@
                      old-score (if (map? old-val)
                                  (compare-words m old-val)
                                  old-val)]
-                 (println "NEW!!!!" new-score "OLD!!!!" old-score)
+;                 (println "NEW!!!!" new-score "OLD!!!!" old-score)
                  (if (or (nil? old-score)
                          (and new-score
                               (< new-score old-score)))
@@ -69,4 +74,17 @@
   ([m maps]
      (let [scores (filter number? (for [[url words] maps]
                                     (compare-words m words)))]
-       (stats/mean scores))))
+       (stats/mean scores)))
+  ([m maps n]
+     (let [comp (if (pos? n)
+                  util/top-pairs
+                  util/bottom-pairs)
+           scores (filter number?
+                          (for [[url words] maps]
+                            (compare-words m words)))
+           best-scores (take (num/abs n)
+                             ((if (pos? n)
+                                identity
+                                reverse)
+                              scores))]
+       (stats/mean best-scores))))

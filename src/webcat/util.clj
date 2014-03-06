@@ -84,6 +84,22 @@
   ([& maps] (map (apply juxt maps) (apply clojure.set/intersection
                                           (map (comp set keys) maps)))))
 
+(defn top-pairs
+  "Returns the top `n` pairs of `m`"
+  ([m n] (take n (reverse (sort-by val m)))))
+
+(defn bottom-pairs
+  "Returns the bottom `n` pairs of `m`"
+  ([m n] (take n (sort-by val m))))
+
+(defn middle-pairs
+  "Returns the `n` pairs of `m` closest to the mean of the values of `m`"
+  ([m n] (take n (into (sorted-map-by #())))))
+
+(defn reverse-args
+  "Returns a function that behaves as `f` with its arguments reversed"
+  ([f] (fn [& args] (apply f (reverse args)))))
+
 (defn proportions
   "Takes a mapping of key -> val, where val is a number, and returns a new
   mapping, where val is now the proportion of val to the vals of the entire
@@ -95,21 +111,3 @@
                                         (/ v total)))))
                    {}
                    m))))
-
-(defn scores
-  ""
-  ([m]
-     (scores m 100 -))
-  ([m scale]
-     (scores m scale -))
-  ([m scale func]
-     (let [number-keys (count m)
-           total-value (apply + (vals m))]
-       (reduce (fn [r [k v]]
-                 (assoc r k
-                        (int (* scale
-                                (/ v
-                                   (func total-value
-                                         number-keys))))))
-               {}
-               m))))

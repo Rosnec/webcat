@@ -68,6 +68,7 @@
   ([url] (let [site (make-page url)
                best-matches (for [[category sites] @database]
                               (math/best-match site sites))]
+           (println "Category Bests:" best-matches "\n")
            (reduce (fn [[r-key r-val] [key val]] (if (< r-val val)
                                         [r-key r-val]
                                           [key   val]))
@@ -79,8 +80,10 @@
                category-averages (reduce (fn [r [category sites]]
                                            (assoc r category
                                                   (math/mean-distance site
-                                                                      sites)))
+                                                                      sites
+                                                                      10)))
                                          {} @database)]
+           (println "Category Average:" category-averages "\n-----")
            (apply min-key category-averages (keys category-averages)))))
 
 
@@ -122,14 +125,14 @@
    ])
 (def italian-food
   ["Penne" "Maccheroni" "Spaghetti" "Linguine"
-   "Fusilli" "Lasagne" "Salami" "Parmigiano-Reggiano"
-   "Pizza" "Calzone" "Gnocchi" "Ravioli"
-   "Fettucine_Alfredo" "Gorgonzola" "Mozzarella" "Biscotti"])
+   "Prosciutto" "Lasagne" "Salami" "Parmigiano-Reggiano"
+   "Pizza" "Gnocchi" "Ravioli"
+   "Fettucine_Alfredo" "Mozzarella" "Biscotti"])
 (def physics
   ["Thermodynamics" "Quantum_mechanics" "Electromagnetism" "Special_relativity"
    "General_relativity" "Classical_mechanics" "Gravitation" "Astrophysics"
-   "Particle_physics" "Standard_model" "Quantum_field_theory" "Cosmology"
-   "Optics" "Fluid_mechanics" "Condensed_matter_physics" "Material_physics"
+   "Higgs_boson" "Standard_model" "Quantum_field_theory" "Cosmology"
+   "Optics" "Fluid_mechanics" "Atomic_nuclei" "Plasma_(physics)"
    ])
 
 (defn add-sites
