@@ -1,0 +1,42 @@
+package webcat.util.java;
+
+import java.util.*;
+import clojure.lang.*;
+
+public class PersistentBST
+    extends APersistentMap
+    implements IObj, Reversible, Sorted {
+
+    public final Comparator comp;
+    public final Node tree;
+    public final int _count;
+    final IPersistentMap _meta;
+
+    final static public PersistentBST EMPTY = new PersistentBST();
+
+    static public IPersistentMap create(Map other) {
+        IPersistentMap ret = EMPTY;
+        for (Object o : other.entrySet()) {
+            Map.Entry e = (Entry) o;
+            ret = ret.assoc(e.getKey(), e.getValue());
+        }
+        return ret;
+    }
+
+    public PersistentBST() {
+        this(RT.DEFAULT_COMPARATOR);
+    }
+
+    public PersistentBST withMeta(IPersistentMap meta) {
+        return new PersistentBST(meta, comp, tree, _count);
+    }
+
+    private PersistentBST(Comparator comp) {
+        this(null, comp);
+    }
+
+    public PersistentBST(
+                         IPersistentMap meta, Comparator comp, Node tree, int _count)
+
+
+}
