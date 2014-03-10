@@ -10,4 +10,5 @@
                  [incanter "1.5.4"]
                  [seesaw "1.4.4"]]
   :main webcat.core
+  :java-source-paths ["src/util/java"]
   :aot [webcat.core])

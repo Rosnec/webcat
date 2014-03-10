@@ -79,10 +79,24 @@
   ([func m & args] (reduce (fn [r [k v]] (assoc r k (apply func v args)))
                            {} m)))
 
+(defn add-missing-keys
+  "Fills in maps with missing keys replaced by a default value.
+  Credit goes to anonymous: https://www.refheap.com/55514"
+  ([default & maps]
+     (let [all-keys (->> maps 
+                         (map (comp set keys)) 
+                         (reduce clojure.set/union))
+           default-dict (into {} (for [k all-keys] [k default]))]
+       (map merge (repeat default-dict) maps))))
+
 (defn matching-values
   "Returns the sequence of corresponding values to the keys shared by the maps."
-  ([& maps] (map (apply juxt maps) (apply clojure.set/intersection
-                                          (map (comp set keys) maps)))))
+  ([default & maps]
+     (let [maps (apply add-missing-keys default maps)]
+       (map (apply juxt maps) (apply clojure.set/intersection
+                                     (map (comp set keys) maps))))))
+
+
 
 (defn top-pairs
   "Returns the top `n` pairs of `m`"

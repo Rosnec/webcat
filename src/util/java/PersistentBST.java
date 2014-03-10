@@ -1,334 +1,368 @@
-package webcat.util.java;
+package util.java;
 
 import java.util.*;
 import clojure.lang.*;
 
-public class PersistentBST
-    extends APersistentMap
-    implements IObj, Reversible, Sorted {
+@SuppressWarnings("unchecked")
+public class PersistentBST extends APersistentMap implements Sorted {
 
-    public final Comparator comp;
-    public final Node tree;
-    public final int _count;
-    final IPersistentMap _meta;
+public final Comparator comp;
+public Node tree;
+public int _count;
+final IPersistentMap _meta;
 
-    final static public PersistentBST EMPTY = new PersistentBST();
+private PersistentBST(Comparator comp) {
+    this(null, comp);
+}
 
-    static public IPersistentMap create(Map other) {
-        IPersistentMap ret = EMPTY;
-        for (Object o : other.entrySet()) {
-            Map.Entry e = (Entry) o;
-            ret = ret.assoc(e.getKey(), e.getValue());
-        }
-        return ret;
+public PersistentBST(IPersistentMap meta, Comparator comp) {
+    this._meta = meta;
+    this.comp = comp;
+    tree = null;
+    _count = 0;
+}
+
+PersistentBST(IPersistentMap meta, Comparator comp, Node tree, int _count) {
+    this._meta = meta;
+    this.comp = comp;
+    this.tree = tree;
+    this._count = _count;
+}
+
+static public IPersistentMap create(Map other) {
+    PersistentBST ret = new PersistentBST(null, RT.DEFAULT_COMPARATOR, null, 0);
+    Map.Entry e;
+
+    for(Object o : other.entrySet()) {
+	e = (Entry) o;
+	append(ret, new Node(e.getKey(), e.getValue()));
+    }
+    return ret;
+}
+
+static PersistentBST append(PersistentBST root, Node leaf) {
+    if (root.tree == null)
+	root.tree = leaf;
+    else
+	append(root.tree, leaf, root.comparator());
+    root._count++;
+    return root;
+}
+
+static Node append(Node tree, Node leaf, Comparator comp) {
+    int c = comp.compare(tree, leaf);
+    if (c > 0)
+	// we have reached the end of the left-chain. insert here
+	if (tree.left() == null)
+	    return tree.addLeft(leaf);
+        // node already exists here. recur
+	else
+	    return append(tree.left(), leaf, comp);
+    // leaf is greater than tree, needs to go right
+    else if (c < 0)
+	// we have reached the end of the right-chain. insert here
+	if (tree.right() == null)
+	    return tree.addRight(leaf);
+        // node already exists here. recur
+	else
+	    return append(tree.right(), leaf, comp);
+    else
+	throw new IllegalArgumentException(String.format("Duplicate key: %d",
+							 leaf.val()));
+}
+
+public PersistentBST assoc(Object key, Object val) {
+    throw new UnsupportedOperationException();
+}
+
+public PersistentBST assocEx(Object key, Object val) {
+    throw new UnsupportedOperationException();
+}
+
+public PersistentBST without(Object o) {
+    throw new UnsupportedOperationException();
+}
+
+public PersistentBST empty() {
+    throw new UnsupportedOperationException();
+}
+
+public Object entryKey(Object entry) {
+    throw new UnsupportedOperationException();
+}
+
+public NodeIterator iterator() {
+    return new NodeIterator(tree);
+}
+
+/* might want to implement this */
+public ISeq seq() {
+    throw new UnsupportedOperationException();
+}
+
+public ISeq seq(boolean ascending) {
+    throw new UnsupportedOperationException();
+}
+
+public ISeq seqFrom(Object o, boolean ascending) {
+    throw new UnsupportedOperationException();
+}
+
+public Comparator comparator() {
+    return comp;
+}
+
+public Iterator keys() {
+    return keys(iterator());
+}
+
+public Iterator keys(NodeIterator it) {
+    return new KeyIterator(it);
+}
+
+public Iterator vals() {
+    return vals(iterator());
+}
+
+public Iterator vals(NodeIterator it) {
+    return new ValIterator(it);
+}
+
+public Object minKey() {
+    Node t = min();
+    return (t != null) ? t.key : null;
+}
+
+public Node min() {
+    Node t = tree;
+    if(t != null)
+	while(t.left() != null)
+	    t = t.left();
+    return t;
+}
+
+public Object maxKey() {
+    Node t = max();
+    return (t != null) ? t.key : null;
+}
+
+public Node max(){
+    Node t = tree;
+    if(t != null)
+	while(t.right() != null)
+	    t = t.right();
+    return t;
+}
+
+public Object valAt(Object key, Object notFound) {
+    Node n = entryAt(key);
+    return (n != null) ? n.val() : notFound;
+}
+
+public Object valAt(Object key) {
+    return valAt(key, null);
+}
+
+public int capacity() {
+    return _count;
+}
+
+public int count() {
+    return _count;
+}
+
+public Node entryAt(Object key) {
+    Node t = tree;
+    while (t != null) {
+	int c = doCompare(key, t.key);
+	if (c == 0)
+	    return t;
+	else if (c < 0)
+	    t = t.left();
+	else
+	    t = t.right();
+    }
+    return t;
+}
+
+public boolean containsKey(Object key) {
+    return entryAt(key) != null;
+}
+
+public int doCompare(Object k1, Object k2) {
+    return comp.compare(k1, k2);
+}
+
+
+static class Node extends AMapEntry {
+    final Object key;
+    final Object val;
+
+    Node left;
+    Node right;
+
+    Node(Object key, Object val) {
+	this.key = key;
+	this.val = val;
     }
 
-    public PersistentBST() {
-        this(RT.DEFAULT_COMPARATOR);
+    public Object key() {
+	return key;
     }
 
-    public PersistentBST withMeta(IPersistentMap meta) {
-        return new PersistentBST(meta, comp, tree, _count);
+    public Object val() {
+	return val;
     }
 
-    private PersistentBST(Comparator comp) {
-        this(null, comp);
+    /* need to implement Entry's abstract methods getKey and getValue,
+       although we'll never use them */
+    public Object getKey() {
+	return key();
     }
 
-    public PersistentBST(IPersistentMap meta, Comparator comp,
-			 Node tree, int _count) {
-	this.comp = comp;
-	this._meta = meta;
-	tree = null;
-	_count = 0;
+    public Object getValue() {
+	return val();
     }
 
-    PersistentBST(IPersistentMap meta, Comparator comp,
-		      Node tree, int _count) {
-	this._meta = meta;
-	this.comp = comp;
-	this.tree = tree;
-	this._count = _count;
+    Node left() {
+	return left;
     }
 
-    static public PersistentBST create(ISeq items) {
-	IPersistentMap ret = EMPTY;
-	for(; items != null; items = items.next().next()) {
-	    if (items.next() == null)
-		throw new IllegalArgumentException(String.format(
-		    "No value supplied for key: %s", items.first()
-		));
-	    ret = ret.assoc(items.first(), RT.second(items));
+    Node right() {
+	return right;
+    }
+
+    public Node addLeft(Node n) {
+	left = n;
+	return this;
+    }
+
+    public Node addRight(Node n) {
+	right = n;
+	return this;
+    }
+
+}
+
+static public class Seq extends ASeq {
+    final ISeq stack;
+    final boolean ascending;
+    final int count;
+
+    public Seq(ISeq stack, boolean ascending) {
+	this.stack = stack;
+	this.ascending = ascending;
+	this.count = -1;
+    }
+
+    public Seq(ISeq stack, boolean ascending, int count) {
+	this.stack = stack;
+	this.ascending = ascending;
+	this.count = -1;
+    }
+
+    Seq(IPersistentMap meta, ISeq stack, boolean ascending, int count) {
+	super(meta);
+	this.stack = stack;
+	this.ascending = ascending;
+	this.count = count;
+    }
+
+    static Seq create(Node tree, boolean ascending, int count) {
+	return new Seq(push(tree, null, ascending), ascending, count);
+    }
+
+    static ISeq push(Node tree, ISeq stack, boolean ascending) {
+	if (tree == null)
+	    return stack;
+	else {
+	    stack = RT.cons(tree, stack);
+	    tree = ascending ? tree.left() : tree.right();
+	    return push(tree, stack, ascending);
 	}
-	return (PersistentBST) ret;
     }
 
-    static public PersistentBST create(Comparator comp, ISeq items) {
-	IPersistentMap ret = new PersistentBST(comp);
-	for(; items != null; items = items.next().next()) {
-	    if (items.next() == null)
-		throw new IllegalArgumentException(String.format(
-		    "No value supplied for key: %s", items.first()
-	        ));
-	    ret = ret.assoc(items.first(), RT.second(items));
-	}
-	return (PersistentBST) ret;
+    public Object first() {
+	return stack.first();
     }
 
-    public boolean containsKey(Object key) {
-	return entryAt(key) != null;
-    }
-
-    // line 97 of PersistentTreeMap.java //
-    public PersistentBST assocEx(Object key, Object val) {
-	Box found = new Box(null);
-	Node t = add(tree, key, val, found);
-	if (t == null) // null == already contains key
-	    throw clojure.lang.Util.runtimeException("Key already present");
-	// PersistentTreeMap passes t.blacken(), but that's for a RBT.
-	// I'm going to assume that just balances the tree, which I'm not too
-	// worried about
-	return new PersistentBST(comp, t, _count + 1, meta());
-    }
-
-    public PersistentBST assoc(Object key, Object val) {
-	Box found = new Box(null);
-	Node t = add(tree, key, val, found);
-	if (t == null) { // null == already contains key
-	    Node foundNode = (Node) found.val;
-	    // note only get same collection on identity of val, not equals()
-	    if (foundNode.val() == val)
-		return this;
-	    return new PersistentBST(comp, replace(tree, key, val),
-				     _count, meta());
-	}
-	return new PersistentBST(comp, t, _count + 1, meta());
-    }
-
-    public PersistentBST without(Object key) {
-	Box found = new Box(null);
-	Node t = remove(tree, key, found);
-	if (t == null) {
-	    // doesn't contain key
-	    if (found.val == null)
-		return this;
-	    // tree is empty
-	    return new PersistentBST(meta(), comp);
-	}
-	// PersistentTreeMap uses t.blacken()
-	return new PersistentBST(comp, t, _count - 1, meta());
-    }
-
-    // line 134 of PersistentTreeMap
-    public ISeq seq() {
-	if (_count > 0)
-	    return Seq.create(tree, false, _count);
-	return null;
-    }
-
-    public IPersistentCollection empty() {
-	return new PersistentBST(meta(), comp);
-    }
-
-    public ISeq rseq() {
-	if (_count > 0)
-	    return Seq.create(tree, false, _count);
-	return null;
-    }
-
-    public Comparator comparator() {
-	return comp;
-    }
-
-    public Object entryKey(Object entry) {
-	return ((IMapEntry) entry).key();
-    }
-
-    public ISeq seq(boolean ascending) {
-	if (_count > 0)
-	    return Seq.create(tree, ascending, _count);
-	return null;
-    }
-
-    public ISeq seqFrom(Object key, boolean ascending) {
-	if (_count > 0) {
-	    ISeq stack = null;
-	    Node t = tree;
-	    while (t != null) {
-		int c = doCompare(key, t.key);
-		if (c == 0) {
-		    stack = RT.cons(t, stack);
-		    return new Seq(stack, ascending);
-		}
-		else if (ascending) {
-		    if (c < 0) {
-			stack = RT.cons(t, stack);
-			t = t.left();
-		    }
-		    else
-			t = t.right();
-		}
-		else {
-		    if (c > 0) {
-			stack = RT.cons(t, stack);
-			t = t.right();
-		    }
-		    else
-			t = t.left();
-		}
-	    }
-	    if (stack != null)
-		return new Seq(stack, ascending);
-	}
-	return null;
-    }
-
-    public NodeIterator iterator() {
-	return new NodeIterator(tree, true);
-    }
-
-    public Object kvreduce(IFn f, Object init) {
-	if (tree != null)
-	    init = tree.kvreduce(f, init);
-	if (RT.isReduced(init))
-	    init = ((IDeref) init).deref();
-	return init;
-    }
-
-    public NodeIterator reverseIterator() {
-	return new NodeIterator(tree, false);
-    }
-
-    public Iterator keys() {
-	return keys(iterator());
-    }
-
-    public Iterator vals() {
-	return vals(iterator());
-    }
-
-    public Iterator keys(NodeIterator it) {
-	return new KeyIterator(it);
-    }
-
-    public Iterator vals(NodeIterator it) {
-	return new ValIterator(it);
-    }
-
-    public Object minKey() {
-	Node t = min();
-	return (t != null) ? t.key : null;
-    }
-
-    public Node min() {
-	Node t = tree;
-	if (t != null)
-	    while(t.left() != null)
-		t = t.left();
-	return t;
-    }
-
-    public Object maxKey() {
-	Node t = max();
-	return (t != null) ? t.key : null;
-    }
-
-    public Node max() {
-	Node t = tree;
-	if (t != null)
-	    while(t.right() != null)
-		t = t.right();
-	return t;
-    }
-
-    public int depth() {
-	return depth(tree);
-    }
-
-    int depth(Node t) {
-	if (t == null)
-	    return 0;
-	return 1 + Math.max(depth(t.left()), depth(t.right()));
-    }
-
-    public Object valAt(Object key, Object notFound) {
-	Node n = entryAt(key);
-	return (n != null) ? n.val() : notFound;
-    }
-
-    public Object valAt(Object key) {
-	return valAt(key, null);
-    }
-
-    public int capacity() {
-	return _count;
+    public ISeq next() {
+	Node tree = (Node) stack.first();
+	ISeq nextstack = push(ascending ? tree.right() : tree.left(),
+			      stack.next(), ascending);
+	return (nextstack != null) ? new Seq(nextstack, ascending, count-1)
+                                   : null;
     }
 
     public int count() {
-	return _count;
+	return (count < 0) ? super.count() : count;
     }
 
-    public Node entryAt(Object key) {
-	Node t = tree;
+    public Obj withMeta(IPersistentMap meta) {
+	return new Seq(meta, stack, ascending, count);
+    }
+}
+
+static public class NodeIterator implements Iterator {
+    Stack parents = new Stack();
+
+    NodeIterator(Node t) {
+	pushBranch(t);
+    }
+
+    void pushBranch(Node t) {
 	while (t != null) {
-	    int c = doCompare(key, t.key);
-	    if (c == 0)
-		return t;
-	    else if (c < 0)
-		t = t.left();
-	    else
-		t = t.right();
+	    parents.push(t);
+	    t = t.left();
 	}
+    }
+
+    public boolean hasNext() {
+	return !(parents.isEmpty());
+    }
+
+    public Object next() {
+	Node t = (Node) parents.pop();
+	pushBranch(t.right());
 	return t;
     }
 
-    public int doCompare(Object k1, Object k2) {
-	return comp.compare(k1, k2);
+    public void remove() {
+	throw new UnsupportedOperationException();
+    }
+}
+
+static abstract class ASpecificIterator implements Iterator {
+    NodeIterator it;
+
+    public boolean hasNext() {
+	return it.hasNext();
     }
 
-    Node add(Node t, Object key, Object val, Box found) {
-	if (t == null)
-	    if (val == null)
-		return new Node(key);
-	    else
-		return new Node(key, val);
-	int c = doCompare(key, t.key);
-	if (c == 0) {
-	    found.val = t;
-	    return null;
-	}
-	Node ins = c < 0 ? add(t.left(),  key, val, found)
-                         : add(t.right(), key, val, found);
-	if (ins == null) // found below
-	    return null;
-	if (c < 0)
-	    return t.addLeft(ins);
-	else
-	    return t.addRight(ins);
+    public abstract Object next();
+
+    public void remove() {
+	throw new UnsupportedOperationException();
+    }
+}
+
+static class KeyIterator extends ASpecificIterator {
+    KeyIterator(NodeIterator it) {
+	this.it = it;
     }
 
-    Node remove(Node t, Object key, Box found) {
-	if (t == null)
-	    return null; // not found signal
-	int c = doCompare(key, t.key);
-	if (c == 0) {
-	    found.val = t;
-	    return append(t.left(), t.right());
-	}
-	Node del = c < 0 ? remove(t.left(),  key, found)
-	                 : remove(t.right(), key, found);
-	if (del == null && found.val == null) // not found below
-	    return null;
-	if (c < 0)
-	    return t.removeLeft(del);
-	else
-	    return t.removeRight(del);
+    public Object next() {
+	return ((Node) it.next()).key;
     }
-    //362
-    static Node append(Node left, Node right) {
-	if (left == null)
-	    return right;
-	else if (right == null)
-	    return left;
-	
+}
+
+static class ValIterator extends ASpecificIterator {
+    ValIterator(NodeIterator it) {
+	this.it = it;
+    }
+    public Object next() {
+	return ((Node) it.next()).val;
+    }
+}
+
 }
