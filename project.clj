@@ -1,4 +1,4 @@
-(defproject webcat "0.2.0-SNAPSHOT"
+(defproject webcat "1.0.0"
   :description "CSC365 Assignment 1: Website categorization program."
   :url "https://github.com/Rosnec/webcat"
   :license {:name "GNU General Public License version 3"

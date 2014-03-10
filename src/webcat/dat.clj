@@ -8,7 +8,8 @@
             [webcat.stop :as stop]
             [webcat.web :as web]
             [webcat.words :as words])
-  (:import [java.io PushbackReader]))
+  (:import [java.io PushbackReader]
+           [util.java PersistentBST]))
 
 (defn word-filter
   "Filter to be used on the word lists from the websites. Returns
@@ -25,11 +26,13 @@
   filtered with the predicate function `pred`."
   ([url] (make-page url string/lower-case word-filter))
   ([url func] (make-page url func word-filter))
-  ([url func pred] (into (sorted-map)
-                         (words/word-scores (web/url-text url)
-                                            1000
-                                            func
-                                            pred))))
+  ([url func pred] (let [good-map (into (sorted-map)
+                                        (words/word-frequencies
+                                         (web/url-text url)
+                                         func
+                                         pred))
+                         my-shitty-map (PersistentBST/create good-map)]
+                     my-shitty-map)))
 
 (defonce database
   (ref {}))
@@ -120,8 +123,7 @@
   ["Bash_(Unix_shell)" "BASIC" "COBOL" "Common_Lisp"
    "Fortran" "Go_(programming_language)" "Haskell_(programming_language)"
    "C_(programming_language)"
-   "C%2B%2B" "Clojure" "Java" "JavaScript"
-   "Python_(programming_language)" "PHP" "Perl" "Ruby_(programming_language)"
+   "C%2B%2B" "Java" "JavaScript" "Python_(programming_language)"
    ])
 (def italian-food
   ["Penne" "Maccheroni" "Spaghetti" "Linguine"
@@ -130,10 +132,14 @@
    "Fettucine_Alfredo" "Mozzarella" "Biscotti"])
 (def physics
   ["Thermodynamics" "Quantum_mechanics" "Electromagnetism" "Special_relativity"
-   "General_relativity" "Classical_mechanics" "Gravitation" "Astrophysics"
-   "Higgs_boson" "Standard_model" "Quantum_field_theory" "Cosmology"
-   "Optics" "Fluid_mechanics" "Atomic_nuclei" "Plasma_(physics)"
+   "General_relativity" "Classical_mechanics" "Gravitation" "Higgs_boson"
+   "Standard_model" "Quantum_field_theory" "Optics" "Plasma_(physics)"
    ])
+(def baseball-teams
+  ["Baltimore_Orioles" "Boston_Red_Sox" "New_York_Yankees" "Tampa_Bay_Rays"
+   "Toronto_Blue_Jays" "Chicago_White_Sox" "Cleveland_Indians" "Detroit_Tigers"
+   "Kansas_City_Royals" "Minnesota_Twins" "New_York_Mets" "Chicago_Cubs"])
+
 
 (defn add-sites
   "Adds a collection of sites with an optional `prefix` and `suffix`
@@ -147,6 +153,6 @@
 (defn add-presets
   ([]
      (add-sites "Programming Languages" wikipedia programming-languages)
-     (add-sites "Italian Food" wikipedia italian-food)
+     (add-sites "Baseball Teams" wikipedia baseball-teams)
      (add-sites "Physics" wikipedia physics)))
 

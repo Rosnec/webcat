@@ -92,16 +92,23 @@ public Object entryKey(Object entry) {
 }
 
 public NodeIterator iterator() {
-    return new NodeIterator(tree);
+    return new NodeIterator(tree, true);
 }
 
-/* might want to implement this */
+public NodeIterator reverseIterator() {
+    return new NodeIterator(tree, false);
+}
+
 public ISeq seq() {
-    throw new UnsupportedOperationException();
+    return (_count > 0) ? Seq.create(tree, true, _count) : null;
 }
 
 public ISeq seq(boolean ascending) {
-    throw new UnsupportedOperationException();
+    return (_count > 0) ? Seq.create(tree, ascending, _count) : null;
+}
+
+public ISeq rseq() {
+    return (_count > 0) ? Seq.create(tree, false, _count) : null;
 }
 
 public ISeq seqFrom(Object o, boolean ascending) {
@@ -305,15 +312,17 @@ static public class Seq extends ASeq {
 
 static public class NodeIterator implements Iterator {
     Stack parents = new Stack();
+    boolean ascending;
 
-    NodeIterator(Node t) {
+    NodeIterator(Node t, boolean ascending) {
+	this.ascending = ascending;
 	pushBranch(t);
     }
 
     void pushBranch(Node t) {
 	while (t != null) {
 	    parents.push(t);
-	    t = t.left();
+	    t = ascending ? t.left() : t.right();
 	}
     }
 
@@ -323,7 +332,7 @@ static public class NodeIterator implements Iterator {
 
     public Object next() {
 	Node t = (Node) parents.pop();
-	pushBranch(t.right());
+	pushBranch(ascending ? t.right() : t.left());
 	return t;
     }
 

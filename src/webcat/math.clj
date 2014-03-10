@@ -61,7 +61,7 @@
                                                   obs exp)))
                                   all-vals expected-vals)]
                   (println "S:" scores)
-                  (first scores))))))
+                  (apply + scores))))))
 
 (defn best-match
   "Finds the map in `coll` which has the smallest euclidean distance from
